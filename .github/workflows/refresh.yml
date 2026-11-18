@@ -1,0 +1,37 @@
+name: Refresh live data
+
+# Builds the warehouse from the real sources and uploads it as an artifact.
+# Runs on demand, and monthly on the 22nd (Vero publishes corrections after
+# the 20th of each month; new tax years arrive in November).
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 22 * *"
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Download real data and build
+        run: make live
+      - name: Data quality summary
+        run: |
+          python - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import duckdb
+          con = duckdb.connect("data/trends.duckdb", read_only=True)
+          print("## Data quality per tax year\n")
+          print(con.sql("select tax_year, source_rows, invalid_business_ids, duplicate_rows, round(share_in_trade_register, 3) as in_register, unmapped_columns from marts.mart_data_quality").df().to_markdown(index=False))
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trends-duckdb
+          path: data/trends.duckdb
+          retention-days: 30
