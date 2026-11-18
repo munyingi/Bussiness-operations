@@ -87,8 +87,13 @@ with tabs[0]:
 
 with tabs[1]:
     ind = q("select * from marts.mart_industry_trend where industry_section <> '?'")
-    st.altair_chart(line(ind, "total_tax", "Tax imposed (€)", color="industry_section_name"), width="stretch")
-    st.altair_chart(line(ind, "share_of_national_tax", "Share of national corporate tax", color="industry_section_name", fmt="%"), width="stretch")
+    # More than ~10 lines makes colours repeat, so chart the 8 largest and group the rest.
+    top8 = ind.groupby("industry_section_name").total_tax.sum().nlargest(8).index
+    chart = ind.assign(industry=ind.industry_section_name.where(ind.industry_section_name.isin(top8), "Other industries"))
+    chart = chart.groupby(["tax_year", "industry"], as_index=False)[["total_tax", "share_of_national_tax"]].sum()
+    st.altair_chart(line(chart, "total_tax", "Tax imposed (€)", color="industry"), width="stretch")
+    st.altair_chart(line(chart, "share_of_national_tax", "Share of national corporate tax", color="industry", fmt="%"), width="stretch")
+    st.caption("The 8 largest industries by total tax; the rest are grouped. Full detail in the table below.")
     pick = st.selectbox("Year", years[::-1], key="ind_year")
     st.dataframe(ind[ind.tax_year == pick].sort_values("total_tax", ascending=False), hide_index=True)
 
