@@ -1,0 +1,29 @@
+# Where every raw file comes from.
+# Vero publishes the latest years on vero.fi. Older years are looked up in the
+# avoindata.fi catalogue at run time; many of those links no longer work.
+
+vero:
+  ckan_api: https://www.avoindata.fi/data/api/3/action/package_show
+  ckan_package_id: yhteisojen-tuloverotuksen-julkiset-tiedot
+  # Direct links listed on https://www.vero.fi/avoindata (checked 2026-11-18).
+  # These take priority over CKAN for the same tax year.
+  direct_files:
+    2025: https://www.vero.fi/contentassets/a7b04897ccd44feda446bd1894c1fd74/yhteiso_tuloverotus_julk_2025.csv
+    2024: https://www.vero.fi/contentassets/a7b04897ccd44feda446bd1894c1fd74/yhteis%C3%B6_tuloverotus_julk_2024.csv
+    2023: https://www.vero.fi/contentassets/a7b04897ccd44feda446bd1894c1fd74/yhteiso-tuloverotus-julk-2023.csv
+    2022: https://www.vero.fi/contentassets/a7b04897ccd44feda446bd1894c1fd74/verohallinto_yhteisojen-tuloverotuksen-julkiset-tiedot-2022.csv
+    2021: https://www.vero.fi/contentassets/a7b04897ccd44feda446bd1894c1fd74/verohallinto_yhteisojen-tuloverotuksen-julkiset-tiedot-2021.csv
+    2020: https://www.vero.fi/contentassets/a7b04897ccd44feda446bd1894c1fd74/verohallinto_yhteisojen-tuloverotuksen-julkiset-tiedot-2020.csv
+  # Corrections made after the original assessment (tax years 2022-2024).
+  changes_file: https://www.vero.fi/contentassets/a7b04897ccd44feda446bd1894c1fd74/2025-tuloverotuksen-muutosverotuksen-julkiset-tiedot-alkaen-vv2022.csv
+  first_year: 2011
+  last_year: 2025
+  # Vero keeps only recent years online (2020+ as of Nov 2026). Older years
+  # dropped here by hand (any file with the year in its name) are loaded too.
+  history_dir: data/manual/vero_history
+
+prh:
+  # Bulk ZIP of every company in the Finnish Trade Register (incl. pending).
+  all_companies: https://avoindata.prh.fi/opendata-ytj-api/v3/all_companies
+  description: https://avoindata.prh.fi/opendata-ytj-api/v3/description
+
