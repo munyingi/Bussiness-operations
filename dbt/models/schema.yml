@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: stg_vero__assessments
+    description: Typed rows of every Vero corporate tax file loaded.
+    columns:
+      - name: tax_year
+        tests: [not_null]
+
+  - name: stg_prh__companies
+    columns:
+      - name: business_id
+        tests: [not_null, unique]
+
+  - name: int_company_years
+    description: One row per company per tax year, joined to the PRH register. The grain every mart builds on.
+    tests:
+      - unique_combination:
+          columns: [business_id, tax_year]
+    columns:
+      - name: business_id
+        tests: [not_null]
+      - name: register_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: [active, dissolved, not_in_trade_register]
+      - name: statutory_rate
+        tests: [not_null]
+
+  - name: int_company_panel
+    columns:
+      - name: business_id
+        tests: [not_null, unique]
+
+  - name: mart_yearly_trend
+    description: National totals per tax year, concentration and year-on-year change.
+    columns:
+      - name: tax_year
+        tests: [unique, not_null]
+  - name: mart_industry_trend
+    description: Tax by TOL 2008 industry section and year.
+  - name: mart_municipality_trend
+    description: Tax by home municipality and year.
+  - name: mart_company_form_trend
+    description: Tax by company form and year.
+  - name: mart_company_age_trend
+    description: Tax by company age band and year.
+  - name: mart_registration_trend
+    description: PRH registrations, dissolutions and bankruptcies started, by year and industry.
+  - name: mart_entry_exit_trend
+    description: Companies entering and leaving the tax data each year.
+  - name: mart_top_taxpayers
+    description: 25 largest corporate taxpayers per year with previous rank.
+  - name: mart_revisions_trend
+    description: Corrections to published assessments per tax year.
+  - name: mart_data_quality
+    description: Data quality report card per tax year.

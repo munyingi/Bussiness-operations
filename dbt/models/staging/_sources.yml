@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Tables written by the Python ingestion layer (ingestion/*.py).
+    schema: raw
+    tables:
+      - name: vero_assessments
+        description: Vero corporate income tax public data, one row per source row, all tax years stacked.
+      - name: vero_changes
+        description: Later corrections to already completed corporate tax assessments (tax years 2022+).
+      - name: vero_header_profile
+        description: Every source header and the canonical column it was mapped to. Used to audit schema drift.
+      - name: prh_companies
+        description: Flattened PRH / YTJ Trade Register bulk file, one row per company.
+      - name: prh_company_events
+        description: Company situations from PRH (KONK = bankruptcy, SELTILA = liquidation, SANE = restructuring).
+      - name: pipeline_run
+        description: Whether the last ingestion used live or synthetic sample data.
