@@ -62,7 +62,9 @@ def main() -> None:
                 wait_until_idle(page)
                 slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
                 path = OUT / f"{i:02d}-{slug}.png"
-                page.screenshot(path=str(path), full_page=True)
+                main = page.locator('[data-testid="stMainBlockContainer"]')
+                # Crop to the content so README images have no empty space below.
+                (main.first.screenshot(path=str(path)) if main.count() else page.screenshot(path=str(path), full_page=True))
                 print("saved", path.relative_to(ROOT))
             browser.close()
     finally:
