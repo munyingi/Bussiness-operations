@@ -2,7 +2,21 @@
 
 How has corporate income tax in Finland developed since 2011, and how does it connect to the companies behind it? This project joins the Finnish Tax Administration's (Vero) public corporate tax data with the Finnish Patent and Registration Office's (PRH) company register, and tracks the trends year by year.
 
-<!-- Screenshots: add to docs/images/ and link here -->
+**Live dashboard:** [bussiness-operations.streamlit.app](https://bussiness-operations.streamlit.app)
+
+![National trend](docs/images/01-national-trend.png)
+
+<details>
+<summary>More screenshots</summary>
+
+![Industries](docs/images/02-industries.png)
+![Municipalities](docs/images/03-municipalities.png)
+![Company register](docs/images/04-company-register.png)
+![Top taxpayers](docs/images/05-top-taxpayers.png)
+![Data quality](docs/images/06-data-quality.png)
+![About](docs/images/07-about.png)
+
+</details>
 
 ## Questions it answers
 
@@ -72,7 +86,7 @@ make sample    # or: run offline on synthetic sample data
 make test      # unit tests
 ```
 
-GitHub Actions runs the tests on every push. **Actions → Refresh live data** downloads the real data on GitHub's servers and uploads the built database as an artifact.
+GitHub Actions runs the tests on every push. **Actions → Refresh live data** downloads the real data on GitHub's servers, builds the warehouse, and commits a small dashboard database (`data/app/trends_app.duckdb`) plus fresh screenshots. Streamlit Community Cloud serves the dashboard from that file, so the hosted app always shows the latest real data.
 
 ## Caveats
 

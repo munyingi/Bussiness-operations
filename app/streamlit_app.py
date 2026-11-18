@@ -13,7 +13,13 @@ import duckdb
 import pandas as pd
 import streamlit as st
 
-DB = Path(os.environ.get("TRENDS_DB", Path(__file__).resolve().parents[1] / "data" / "trends.duckdb"))
+ROOT = Path(__file__).resolve().parents[1]
+# Full warehouse when built locally; otherwise the small committed snapshot
+# that GitHub Actions refreshes from the real sources (used on Streamlit Cloud).
+DB = Path(os.environ.get("TRENDS_DB") or next(
+    (p for p in (ROOT / "data" / "trends.duckdb", ROOT / "data" / "app" / "trends_app.duckdb") if p.exists()),
+    ROOT / "data" / "app" / "trends_app.duckdb",
+))
 
 st.set_page_config(page_title="Finnish corporate tax trends", layout="wide")
 
@@ -45,7 +51,7 @@ def line(df: pd.DataFrame, y: str, title: str, color: str | None = None, fmt: st
 
 
 if not DB.exists():
-    st.error(f"No database at {DB}. Run `make sample` or `make live` first.")
+    st.error(f"No database at {DB}. Run `make sample` or `make live`, or wait for the Refresh live data workflow to commit data/app/trends_app.duckdb.")
     st.stop()
 
 run = q("select * from raw.pipeline_run")
@@ -61,7 +67,7 @@ st.caption(
     "Sources: Finnish Tax Administration (Vero) and Finnish Patent and Registration Office (PRH), CC BY 4.0."
 )
 
-tabs = st.tabs(["National trend", "Industries", "Municipalities", "Company register", "Top taxpayers", "Data quality"])
+tabs = st.tabs(["National trend", "Industries", "Municipalities", "Company register", "Top taxpayers", "Data quality", "About"])
 
 with tabs[0]:
     last = trend.iloc[-1]
@@ -124,3 +130,38 @@ with tabs[5]:
     st.dataframe(q("select * from marts.mart_revisions_trend"), hide_index=True)
     st.markdown("**How each year's source columns were mapped**")
     st.dataframe(q("select tax_year, column_position, source_header, canonical_column from staging.stg_vero__header_profile order by tax_year, column_position"), hide_index=True)
+
+with tabs[6]:
+    st.subheader("About this project")
+    st.markdown(
+        f"""
+This dashboard tracks corporate income tax in Finland and the companies behind it, year by year.
+It joins two public datasets on the Business ID (Y-tunnus):
+
+- **Finnish Tax Administration (Vero):** every corporate taxpayer's name, home municipality,
+  taxable income and tax imposed, published each November. Tax years loaded here: **{years[0]} to {years[-1]}**.
+- **Finnish Patent and Registration Office (PRH):** the Trade Register, with company form,
+  industry (TOL 2008), registration and end dates, and bankruptcy and liquidation events.
+
+**How it is built.** A Python ingestion layer downloads the files, maps each year's column names to one
+schema (they change between years), validates every Business ID with its check digit and loads everything
+into DuckDB. dbt then models one row per company per tax year, joins the register, and builds the trend
+tables shown in the other tabs. Tests run on every build, and GitHub Actions refreshes the data from the
+original sources.
+
+**Read the numbers carefully.**
+- Taxable income is not profit, and zero tax is often legitimate (losses, losses carried forward).
+- Housing companies and mutual real estate companies are not in Vero's open data.
+- Industry is the company's current industry, applied to every year.
+- Municipality is the home municipality on Vero's list, not where the activity happens.
+- The register's open data misses companies removed long ago, so older register counts are lower bounds.
+- Vero currently publishes tax years 2020 onward online; older years are added when available.
+
+**Sources and licence.** Data: Finnish Tax Administration and Finnish Patent and Registration Office,
+CC BY 4.0. Code: MIT licence.
+
+**Author.** Built by Samwel Munyingi.
+[GitHub](https://github.com/munyingi/Bussiness-operations) ·
+[LinkedIn](https://www.linkedin.com/in/samwel-munyingi-352a88161)
+"""
+    )

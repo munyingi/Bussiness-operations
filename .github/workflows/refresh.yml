@@ -1,6 +1,8 @@
 name: Refresh live data
 
-# Builds the warehouse from the real sources and uploads it as an artifact.
+# Builds the warehouse from the real Vero and PRH data, then commits two
+# things back to the repo: a small dashboard database (data/app/) that
+# Streamlit Community Cloud serves, and fresh screenshots (docs/images/).
 # Runs on demand, and monthly on the 22nd (Vero publishes corrections after
 # the 20th of each month; new tax years arrive in November).
 
@@ -8,6 +10,9 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "17 5 22 * *"
+
+permissions:
+  contents: write
 
 jobs:
   live:
@@ -24,12 +29,34 @@ jobs:
         run: make live
       - name: Data quality summary
         run: |
-          python - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import duckdb
           con = duckdb.connect("data/trends.duckdb", read_only=True)
-          print("## Data quality per tax year\n")
+          print("## Yearly trend\n")
+          print(con.sql("select tax_year, n_taxpayers, n_paying, round(total_tax/1e6, 1) as tax_meur, round(top1pct_share, 3) as top1pct from marts.mart_yearly_trend").df().to_markdown(index=False))
+          print("\n## Data quality\n")
           print(con.sql("select tax_year, source_rows, invalid_business_ids, duplicate_rows, round(share_in_trade_register, 3) as in_register, unmapped_columns from marts.mart_data_quality").df().to_markdown(index=False))
-          EOF
+          PY
+      - name: Export dashboard database
+        run: python scripts/export_app_db.py
+      - name: Screenshots
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+          TRENDS_DB=data/app/trends_app.duckdb python scripts/screenshots.py
+      - name: Commit snapshot and screenshots
+        env:
+          ACTOR: ${{ github.actor }}
+          ACTOR_ID: ${{ github.actor_id }}
+        run: |
+          # Commit as the repository owner's GitHub identity (no-reply address).
+          git config user.name "$ACTOR"
+          git config user.email "${ACTOR_ID}+${ACTOR}@users.noreply.github.com"
+          git add -f data/app/trends_app.duckdb docs/images/*.png
+          if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
+          git commit -m "Refresh real data snapshot and dashboard screenshots"
+          git pull --rebase origin main
+          git push origin HEAD:main
       - uses: actions/upload-artifact@v4
         with:
           name: trends-duckdb
