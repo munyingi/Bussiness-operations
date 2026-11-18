@@ -53,7 +53,7 @@ def main() -> None:
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(executable_path=args.chrome) if args.chrome else p.chromium.launch()
-            page = browser.new_page(viewport={"width": 1400, "height": 900}, device_scale_factor=1)
+            page = browser.new_page(viewport={"width": 1400, "height": 2600}, device_scale_factor=1)
             page.goto(url, wait_until="networkidle", timeout=120_000)
             page.wait_for_selector('[role="tab"]', timeout=120_000)
             wait_until_idle(page)
