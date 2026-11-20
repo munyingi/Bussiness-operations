@@ -1,5 +1,7 @@
 # Finnish corporate tax and company register trends
 
+[![CI](https://github.com/munyingi/Bussiness-operations/actions/workflows/ci.yml/badge.svg)](https://github.com/munyingi/Bussiness-operations/actions/workflows/ci.yml)
+
 How has corporate income tax in Finland developed since 2011, and how does it connect to the companies behind it? This project joins the Finnish Tax Administration's (Vero) public corporate tax data with the Finnish Patent and Registration Office's (PRH) company register, and tracks the trends year by year.
 
 **Live dashboard:** [bussiness-operations.streamlit.app](https://bussiness-operations.streamlit.app)
